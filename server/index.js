@@ -65,6 +65,24 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
+// ── Instance identity (for load-balancing evidence) ───────────────────────────
+// Inject per-task identifier via X-Instance-ID header on every response
+const INSTANCE_ID = process.env.INSTANCE_ID || require("os").hostname();
+app.use((_req, res, next) => { res.setHeader("X-Instance-ID", INSTANCE_ID); next(); });
+
+// ── Load test endpoint (burns CPU so auto-scaling triggers) ───────────────────
+app.get("/api/system/load", (_req, res) => {
+  const start = Date.now();
+  let n = 1n;
+  // ~50 ms of CPU work (prime sieve to 25 000)
+  for (let i = 2n; i < 25000n; i++) {
+    let prime = true;
+    for (let j = 2n; j * j <= i; j++) { if (i % j === 0n) { prime = false; break; } }
+    if (prime) n += i;
+  }
+  res.json({ instance: INSTANCE_ID, computed: n.toString(), ms: Date.now() - start });
+});
+
 // ── API routes (wired up in later steps) ─────────────────────────────────────
 app.use("/api/auth",         require("./routes/auth"));
 app.use("/api/users",        require("./routes/users"));
