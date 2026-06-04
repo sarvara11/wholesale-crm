@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Wholesale CRM</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      background: #0f0e1a;
+      overflow: hidden;
+    }
+    /* Left decorative panel */
+    .left-panel {
+      flex: 1;
+      display: none;
+      position: relative;
+      background: linear-gradient(145deg, #1e1b4b 0%, #312e81 40%, #4338ca 70%, #6366f1 100%);
+      overflow: hidden;
+    }
+    @media (min-width: 1024px) { .left-panel { display: flex; flex-direction: column; justify-content: center; padding: 60px; } }
+    .left-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .floating-card {
+      position: absolute;
+      background: rgba(255,255,255,.07);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .float-1 { top: 15%; right: 8%; width: 200px; animation: float 6s ease-in-out infinite; }
+    .float-2 { bottom: 20%; left: 5%; width: 170px; animation: float 8s ease-in-out infinite reverse; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+    /* Right login panel */
+    .right-panel {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 40px 32px;
+      background: #fff;
+    }
+    @media (max-width: 640px) { .right-panel { padding: 32px 20px; } }
+
+    .login-card { width: 100%; max-width: 400px; margin: auto; }
+
+    /* Input with icon */
+    .input-group { position: relative; }
+    .input-group .input-icon {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      color: #9ca3af; font-size: 14px; pointer-events: none;
+    }
+    .input-group input {
+      padding-left: 40px;
+      height: 46px;
+      border-radius: 12px;
+      border: 1.5px solid #e5e7eb;
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      font-family: inherit;
+      color: #111827;
+    }
+    .input-group input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+    .input-group input::placeholder { color: #d1d5db; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: #9ca3af; font-size: 14px;
+    }
+    .pw-toggle:hover { color: #6366f1; }
+
+    .submit-btn {
+      width: 100%; height: 48px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 600; font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(99,102,241,.4);
+      transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,.5); }
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+    .error-box {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: #dc2626;
+      margin-bottom: 20px;
+    }
+
+    .demo-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: #f5f3ff;
+      border: 1px solid #e0e7ff;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #5b21b6;
+      margin-top: 6px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .demo-badge:hover { background: #ede9fe; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fa-spin { animation: spin .7s linear infinite; }
+  </style>
+</head>
+<body>
+
+  <!-- Left decorative panel -->
+  <div class="left-panel">
+    <!-- Floating cards -->
+    <div class="floating-card float-1">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="width:32px;height:32px;background:rgba(99,102,241,.3);border-radius:8px;display:flex;align-items:center;justify-content:center">
+          <i class="fa-solid fa-arrow-trend-up" style="color:#a5b4fc;font-size:13px"></i>
+        </div>
+        <div>
+          <p style="color:rgba(255,255,255,.5);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Revenue</p>
+          <p style="color:#fff;font-size:17px;font-weight:800">$159,590</p>
+        </div>
+      </div>
+      <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px">
+        <div style="height:100%;width:72%;background:linear-gradient(90deg,#818cf8,#6366f1);border-radius:2px"></div>
+      </div>
+    </div>
+
+    <div class="floating-card float-2">
+      <p style="color:rgba(255,255,255,.5);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:10px">Active Customers</p>
+      <p style="color:#fff;font-size:24px;font-weight:800;margin-bottom:4px">12</p>
+      <p style="color:#6ee7b7;font-size:12px"><i class="fa-solid fa-arrow-up" style="font-size:10px"></i> 8% this month</p>
+    </div>
+
+    <!-- Main text -->
+    <div style="position:relative;z-index:1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px">
+        <div style="width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center">
+          <i class="fa-solid fa-shirt" style="color:#fff;font-size:18px"></i>
+        </div>
+        <div>
+          <p style="color:#fff;font-weight:700;font-size:16px">Wholesale CRM</p>
+          <p style="color:rgba(165,180,252,.7);font-size:12px">Cloud Edition</p>
+        </div>
+      </div>
+      <h2 style="color:#fff;font-size:36px;font-weight:800;line-height:1.15;margin-bottom:16px">
+        Manage your<br>wholesale business<br>
+        <span style="color:#a5b4fc">from anywhere.</span>
+      </h2>
+      <p style="color:rgba(199,210,254,.7);font-size:15px;line-height:1.7;max-width:380px">
+        Complete CRM for your ready-made clothing operations — customers, leads, pipeline, inventory and reports in one place.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right login panel -->
+  <div class="right-panel">
+    <div class="login-card">
+      <!-- Mobile logo -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
+        <div style="width:38px;height:38px;background:linear-gradient(135deg,#818cf8,#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(99,102,241,.4)">
+          <i class="fa-solid fa-shirt" style="color:#fff;font-size:14px"></i>
+        </div>
+        <div>
+          <p style="font-weight:700;font-size:15px;color:#111827">Wholesale CRM</p>
+          <p style="font-size:11px;color:#9ca3af">Powered by Node.js + MongoDB</p>
+        </div>
+      </div>
+
+      <h1 style="font-size:26px;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-.4px">Welcome back</h1>
+      <p style="font-size:14px;color:#6b7280;margin-bottom:28px">Sign in to your account to continue</p>
+
+      <!-- Error box -->
+      <div id="login-error" class="error-box">
+        <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
+        <span id="login-error-msg"></span>
+      </div>
+
+      <!-- Form -->
+      <form id="login-form" novalidate>
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px">Email address</label>
+          <div class="input-group">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input id="email" type="email" placeholder="you@company.com" autocomplete="email" />
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px">Password</label>
+          <div class="input-group">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px" />
+            <button type="button" class="pw-toggle" id="pw-toggle">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="login-btn" class="submit-btn">
+          <span id="btn-text">Sign in</span>
+          <i id="btn-spinner" class="fa-solid fa-circle-notch fa-spin" style="display:none"></i>
+          <i id="btn-arrow" class="fa-solid fa-arrow-right" style="font-size:13px"></i>
+        </button>
+      </form>
+
+      <!-- Demo credentials -->
+      <div style="margin-top:24px">
+        <p style="font-size:12px;color:#9ca3af;text-align:center;margin-bottom:10px;font-weight:500">Quick access demo accounts</p>
+        <div class="demo-badge" onclick="fillCreds('manager@crm.test','Manager123!')">
+          <div style="width:22px;height:22px;background:#ede9fe;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fa-solid fa-crown" style="color:#7c3aed;font-size:10px"></i>
+          </div>
+          <div>
+            <p style="font-weight:700;font-size:12px">Manager</p>
+            <p style="color:#7c3aed;font-size:11px">manager@crm.test / Manager123!</p>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;font-size:10px;color:#a78bfa"></i>
+        </div>
+        <div class="demo-badge" onclick="fillCreds('admin@crm.test','Admin123!')" style="margin-top:6px">
+          <div style="width:22px;height:22px;background:#e0e7ff;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fa-solid fa-user-gear" style="color:#4338ca;font-size:10px"></i>
+          </div>
+          <div>
+            <p style="font-weight:700;font-size:12px">Admin</p>
+            <p style="color:#4338ca;font-size:11px">admin@crm.test / Admin123!</p>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;font-size:10px;color:#818cf8"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Auto-redirect if already logged in
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => { if (r.ok) window.location.replace('/app.html'); })
+      .catch(() => {});
+
+    function fillCreds(email, pw) {
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = pw;
+      document.getElementById('login-form').dispatchEvent(new Event('submit'));
+    }
+
+    document.getElementById('pw-toggle').addEventListener('click', () => {
+      const pw   = document.getElementById('password');
+      const icon = document.querySelector('#pw-toggle i');
+      pw.type    = pw.type === 'password' ? 'text' : 'password';
+      icon.className = pw.type === 'text' ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const err     = document.getElementById('login-error');
+      const errMsg  = document.getElementById('login-error-msg');
+      const btn     = document.getElementById('login-btn');
+      const btnText = document.getElementById('btn-text');
+      const spinner = document.getElementById('btn-spinner');
+      const arrow   = document.getElementById('btn-arrow');
+
+      err.style.display = 'none';
+      btn.disabled = true;
+      btnText.textContent = 'Signing in…';
+      spinner.style.display = 'inline';
+      arrow.style.display   = 'none';
+
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        window.location.replace('/app.html');
+      } catch (ex) {
+        errMsg.textContent    = ex.message;
+        err.style.display     = 'flex';
+        btn.disabled          = false;
+        btnText.textContent   = 'Sign in';
+        spinner.style.display = 'none';
+        arrow.style.display   = 'inline';
+      }
+    });
+  </script>
+</body>
+</html>

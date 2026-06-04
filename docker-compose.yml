@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  crm:
+    build: .
+    image: wholesale-crm:local
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Uncomment to scale locally: docker-compose up --scale crm=3
+    # deploy:
+    #   replicas: 2
+
+# For local dev you can point MONGODB_URI at a local Mongo container:
+# mongo:
+#   image: mongo:7
+#   ports: ["27017:27017"]
+#   volumes: [mongo_data:/data/db]
+#
+# volumes:
+#   mongo_data:
