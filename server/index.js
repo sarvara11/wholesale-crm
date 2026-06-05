@@ -13,21 +13,26 @@ const app = express();
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(
   helmet({
+    // Disable HSTS — no SSL cert on this ALB, HSTS would force browser to
+    // upgrade asset/API requests to HTTPS (port 443) which is not open.
+    strictTransportSecurity: false,
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc:  ["'self'", "'unsafe-inline'", "'unsafe-eval'",
-                     "https://cdn.tailwindcss.com",
-                     "https://cdn.jsdelivr.net",
-                     "https://cdnjs.cloudflare.com"],
-        styleSrc:   ["'self'", "'unsafe-inline'",
-                     "https://cdn.tailwindcss.com",
-                     "https://cdn.jsdelivr.net",
-                     "https://cdnjs.cloudflare.com",
-                     "https://fonts.googleapis.com"],
-        fontSrc:    ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-        imgSrc:     ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
+        defaultSrc:    ["'self'"],
+        scriptSrc:     ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                        "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://cdnjs.cloudflare.com"],
+        // Allow onclick="..." attributes (demo badges in login.html)
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc:      ["'self'", "'unsafe-inline'",
+                        "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://cdnjs.cloudflare.com",
+                        "https://fonts.googleapis.com"],
+        fontSrc:       ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+        imgSrc:        ["'self'", "data:", "https:"],
+        connectSrc:    ["'self'"],
       },
     },
   })
