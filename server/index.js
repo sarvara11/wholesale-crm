@@ -34,7 +34,7 @@ app.use(
                                  "https://cdnjs.cloudflare.com"],
         imgSrc:                 ["'self'", "data:", "https:"],
         connectSrc:             ["'self'"],
-        upgradeInsecureRequests: [],  // remove — would upgrade HTTP assets to HTTPS
+        upgradeInsecureRequests: false,  // remove — would upgrade HTTP assets to HTTPS
       },
     },
   })
