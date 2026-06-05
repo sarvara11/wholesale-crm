@@ -43,7 +43,7 @@ resource "aws_security_group" "ecs" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow outbound (NAT → Atlas)"
+    description = "Allow outbound via NAT to Atlas"
   }
   tags = { Name = "${var.project}-ecs-sg" }
 }

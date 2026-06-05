@@ -1,7 +1,10 @@
 # ── ECS Cluster ───────────────────────────────────────────────────────────────
 resource "aws_ecs_cluster" "main" {
   name = var.project
-  setting { name = "containerInsights", value = "enabled" }
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "main" {
