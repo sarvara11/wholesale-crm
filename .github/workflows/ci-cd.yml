@@ -84,8 +84,8 @@ jobs:
           push: true
           # Two tags: a stable :latest and an immutable :<sha> for rollbacks
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ghcr.io/sarvara11/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/sarvara11/${{ env.IMAGE_NAME }}:${{ github.sha }}
           # Layer cache stored in GitHub Actions cache — speeds up repeat builds
           cache-from: type=gha
           cache-to:   type=gha,mode=max
