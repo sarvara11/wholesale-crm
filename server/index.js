@@ -13,26 +13,28 @@ const app = express();
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(
   helmet({
-    // Disable HSTS — no SSL cert on this ALB, HSTS would force browser to
-    // upgrade asset/API requests to HTTPS (port 443) which is not open.
-    strictTransportSecurity: false,
+    // ── Disabled for HTTP-only ALB deployment (no SSL cert) ───────────────
+    strictTransportSecurity: false,   // no HSTS — would force browser to HTTPS
+    crossOriginOpenerPolicy: false,   // removes COOP header warning on HTTP
+    originAgentCluster:      false,   // removes OAC header warning on HTTP
     contentSecurityPolicy: {
       directives: {
-        defaultSrc:    ["'self'"],
-        scriptSrc:     ["'self'", "'unsafe-inline'", "'unsafe-eval'",
-                        "https://cdn.tailwindcss.com",
-                        "https://cdn.jsdelivr.net",
-                        "https://cdnjs.cloudflare.com"],
-        // Allow onclick="..." attributes (demo badges in login.html)
-        scriptSrcAttr: ["'unsafe-inline'"],
-        styleSrc:      ["'self'", "'unsafe-inline'",
-                        "https://cdn.tailwindcss.com",
-                        "https://cdn.jsdelivr.net",
-                        "https://cdnjs.cloudflare.com",
-                        "https://fonts.googleapis.com"],
-        fontSrc:       ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-        imgSrc:        ["'self'", "data:", "https:"],
-        connectSrc:    ["'self'"],
+        defaultSrc:             ["'self'"],
+        scriptSrc:              ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                                 "https://cdn.tailwindcss.com",
+                                 "https://cdn.jsdelivr.net",
+                                 "https://cdnjs.cloudflare.com"],
+        scriptSrcAttr:          ["'unsafe-inline'"],   // allow onclick="..."
+        styleSrc:               ["'self'", "'unsafe-inline'",
+                                 "https://cdn.tailwindcss.com",
+                                 "https://cdn.jsdelivr.net",
+                                 "https://cdnjs.cloudflare.com",
+                                 "https://fonts.googleapis.com"],
+        fontSrc:                ["'self'", "https://fonts.gstatic.com",
+                                 "https://cdnjs.cloudflare.com"],
+        imgSrc:                 ["'self'", "data:", "https:"],
+        connectSrc:             ["'self'"],
+        upgradeInsecureRequests: [],  // remove — would upgrade HTTP assets to HTTPS
       },
     },
   })
