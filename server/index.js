@@ -13,28 +13,32 @@ const app = express();
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(
   helmet({
-    // ── Disabled for HTTP-only ALB deployment (no SSL cert) ───────────────
-    strictTransportSecurity: false,   // no HSTS — would force browser to HTTPS
-    crossOriginOpenerPolicy: false,   // removes COOP header warning on HTTP
-    originAgentCluster:      false,   // removes OAC header warning on HTTP
+    strictTransportSecurity: false,
+    crossOriginOpenerPolicy: false,
+    originAgentCluster:      false,
     contentSecurityPolicy: {
+      useDefaults: false,           // take full control — no hidden defaults added
       directives: {
-        defaultSrc:             ["'self'"],
-        scriptSrc:              ["'self'", "'unsafe-inline'", "'unsafe-eval'",
-                                 "https://cdn.tailwindcss.com",
-                                 "https://cdn.jsdelivr.net",
-                                 "https://cdnjs.cloudflare.com"],
-        scriptSrcAttr:          ["'unsafe-inline'"],   // allow onclick="..."
-        styleSrc:               ["'self'", "'unsafe-inline'",
-                                 "https://cdn.tailwindcss.com",
-                                 "https://cdn.jsdelivr.net",
-                                 "https://cdnjs.cloudflare.com",
-                                 "https://fonts.googleapis.com"],
-        fontSrc:                ["'self'", "https://fonts.gstatic.com",
-                                 "https://cdnjs.cloudflare.com"],
-        imgSrc:                 ["'self'", "data:", "https:"],
-        connectSrc:             ["'self'"],
-        upgradeInsecureRequests: false,  // remove — would upgrade HTTP assets to HTTPS
+        defaultSrc:    ["'self'"],
+        baseUri:       ["'self'"],
+        formAction:    ["'self'"],
+        frameAncestors:["'self'"],
+        objectSrc:     ["'none'"],
+        scriptSrc:     ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                        "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://cdnjs.cloudflare.com"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc:      ["'self'", "'unsafe-inline'",
+                        "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://cdnjs.cloudflare.com",
+                        "https://fonts.googleapis.com"],
+        fontSrc:       ["'self'", "https://fonts.gstatic.com",
+                        "https://cdnjs.cloudflare.com"],
+        imgSrc:        ["'self'", "data:", "https:"],
+        connectSrc:    ["'self'"],
+        // upgradeInsecureRequests intentionally omitted — HTTP-only deployment
       },
     },
   })
