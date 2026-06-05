@@ -4,3 +4,8 @@ node_modules/
 .DS_Store
 dist/
 coverage/
+
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/.terraform/
+infra/tfplan
