@@ -17,25 +17,20 @@ async function list(req, res) {
   if (status) filter.status = status;
   if (search) {
     const re = new RegExp(search, "i");
-    filter.$and = [
-      Object.keys(filter).length ? filter : {},
-      { $or: [{ name: re }, { company: re }, { email: re }] },
-    ];
-    // rebuild to avoid double $or collision
-    const base = scopeFilter(req);
     const searchClause = { $or: [{ name: re }, { company: re }, { email: re }] };
-    const combined = Object.keys(base).length
-      ? { $and: [base, searchClause] }
-      : searchClause;
-    return res.json(
-      await Customer.find(combined)
+    const base = scopeFilter(req);
+    const combined = Object.keys(base).length ? { $and: [base, searchClause] } : searchClause;
+    const [customers, total] = await Promise.all([
+      Customer.find(combined)
         .populate("assignedTo", "name email")
-        .populate("createdBy", "name email")
+        .populate("createdBy",  "name email")
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit))
-        .lean()
-    );
+        .skip((+page - 1) * +limit)
+        .limit(+limit)
+        .lean(),
+      Customer.countDocuments(combined),
+    ]);
+    return res.json({ customers, total, page: +page, limit: +limit });
   }
 
   const customers = await Customer.find(filter)
