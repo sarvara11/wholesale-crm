@@ -13,17 +13,17 @@ const app = express();
 // ── Security & parsing middleware ─────────────────────────────────────────────
 app.use(
   helmet({
-    strictTransportSecurity: false,
     crossOriginOpenerPolicy: false,
     originAgentCluster:      false,
     contentSecurityPolicy: {
-      useDefaults: false,           // take full control — no hidden defaults added
+      useDefaults: false,
       directives: {
-        defaultSrc:    ["'self'"],
-        baseUri:       ["'self'"],
-        formAction:    ["'self'"],
-        frameAncestors:["'self'"],
-        objectSrc:     ["'none'"],
+        defaultSrc:              ["'self'"],
+        baseUri:                 ["'self'"],
+        formAction:              ["'self'"],
+        frameAncestors:          ["'self'"],
+        objectSrc:               ["'none'"],
+        upgradeInsecureRequests: [],
         scriptSrc:     ["'self'", "'unsafe-inline'", "'unsafe-eval'",
                         "https://cdn.tailwindcss.com",
                         "https://cdn.jsdelivr.net",
@@ -38,7 +38,6 @@ app.use(
                         "https://cdnjs.cloudflare.com"],
         imgSrc:        ["'self'", "data:", "https:"],
         connectSrc:    ["'self'"],
-        // upgradeInsecureRequests intentionally omitted — HTTP-only deployment
       },
     },
   })

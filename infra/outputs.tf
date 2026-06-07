@@ -1,6 +1,16 @@
-output "alb_url" {
-  description = "Public URL of the Application Load Balancer"
-  value       = "http://${aws_lb.main.dns_name}"
+output "site_url" {
+  description = "Live site URL"
+  value       = "https://${var.domain_name}"
+}
+
+output "alb_dns" {
+  description = "Raw ALB DNS name (fallback)"
+  value       = aws_lb.main.dns_name
+}
+
+output "route53_nameservers" {
+  description = "Copy these 4 NS records to your domain registrar"
+  value       = aws_route53_zone.app.name_servers
 }
 
 output "ecr_repo_url" {
@@ -19,11 +29,6 @@ output "ecs_cluster" {
 
 output "ecs_service" {
   value = aws_ecs_service.app.name
-}
-
-output "route53_record" {
-  description = "Private DNS friendly name (resolves inside VPC)"
-  value       = aws_route53_record.app.fqdn
 }
 
 output "cloudwatch_log_group" {

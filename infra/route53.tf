@@ -1,16 +1,41 @@
-# ── Route 53 — CNAME pointing friendly name at ALB ───────────────────────────
-# Uses a public hosted zone; if you own a domain point your NS records there.
-# Without a real domain we create a zone for documentation and output the ALB DNS.
+# ── Route 53 — Public hosted zone for wholesalesphere.forum ──────────────────
 resource "aws_route53_zone" "app" {
-  name    = "${var.project}.internal"
-  comment = "Managed by Terraform — BTEC Networking in the Cloud"
-  # Private zone scoped to our VPC (works without a registered domain)
-  vpc { vpc_id = aws_vpc.main.id }
+  name    = var.domain_name
+  comment = "Managed by Terraform — Wholesale CRM"
 }
 
-resource "aws_route53_record" "app" {
+# DNS records used by ACM to validate the certificate
+resource "aws_route53_record" "cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.main.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
   zone_id = aws_route53_zone.app.zone_id
-  name    = "app.${var.project}.internal"
+  name    = each.value.name
+  type    = each.value.type
+  records = [each.value.record]
+  ttl     = 60
+}
+
+# Apex domain  →  ALB
+resource "aws_route53_record" "apex" {
+  zone_id = aws_route53_zone.app.zone_id
+  name    = var.domain_name
+  type    = "A"
+  alias {
+    name                   = aws_lb.main.dns_name
+    zone_id                = aws_lb.main.zone_id
+    evaluate_target_health = true
+  }
+}
+
+# www subdomain  →  ALB
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.app.zone_id
+  name    = "www.${var.domain_name}"
   type    = "A"
   alias {
     name                   = aws_lb.main.dns_name

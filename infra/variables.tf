@@ -1,5 +1,6 @@
 variable "aws_region"   { default = "eu-west-1" }
 variable "project"      { default = "wholesale-crm" }
+variable "domain_name"  { default = "wholesalesphere.forum" }
 variable "image_tag"    { default = "latest" }
 
 variable "mongodb_uri" {
