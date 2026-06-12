@@ -30,7 +30,7 @@ const CustomersPage = (() => {
               <th>Name</th><th>Company</th><th>Email</th><th>Phone</th>
               <th>Status</th><th>Assigned To</th><th>Created</th><th></th>
             </tr></thead>
-            <tbody id="cust-tbody">${Utils.spinner()}</tbody>
+            <tbody id="cust-tbody"><tr><td colspan="8">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
         <div id="cust-pagination" class="px-5 pb-4"></div>
