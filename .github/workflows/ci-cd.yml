@@ -57,9 +57,8 @@ jobs:
           IMAGE_URI="$REGISTRY/$ECR_REPO:$IMAGE_TAG"
           docker build -t "$IMAGE_URI" .
           docker push  "$IMAGE_URI"
-          # Also tag as latest
-          docker tag  "$IMAGE_URI" "$REGISTRY/$ECR_REPO:latest"
-          docker push "$REGISTRY/$ECR_REPO:latest"
+          docker tag   "$IMAGE_URI" "$REGISTRY/$ECR_REPO:latest"
+          docker push  "$REGISTRY/$ECR_REPO:latest"
           echo "image=$IMAGE_URI" >> "$GITHUB_OUTPUT"
 
   # ── Job 3: Deploy to ECS ───────────────────────────────────────────────────
@@ -80,34 +79,95 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      - name: Download current task definition
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition $ECS_SERVICE \
-            --query taskDefinition \
-            --output json > task-def.json
-
-      - name: Update image in task definition
+      - name: Build new task definition with updated image
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-def.json
-          container-name:  ${{ env.ECS_SERVICE }}
-          image:           ${{ needs.build.outputs.image }}
-
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service:         ${{ env.ECS_SERVICE }}
-          cluster:         ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
-
-      - name: Smoke test /health
+        env:
+          NEW_IMAGE: ${{ needs.build.outputs.image }}
         run: |
-          ALB=$(aws elbv2 describe-load-balancers \
-            --names wholesale-crm-alb \
-            --query 'LoadBalancers[0].DNSName' \
+          # Download current task definition and swap in the new image.
+          # Strip read-only fields that register-task-definition rejects.
+          aws ecs describe-task-definition \
+            --task-definition "$ECS_SERVICE" \
+            --query taskDefinition \
+            --output json \
+          | jq --arg IMAGE "$NEW_IMAGE" '
+              .containerDefinitions[0].image = $IMAGE
+              | del(
+                  .taskDefinitionArn,
+                  .revision,
+                  .status,
+                  .requiresAttributes,
+                  .compatibilities,
+                  .registeredAt,
+                  .registeredBy
+                )
+            ' > new-task-def.json
+
+          echo "--- new task definition ---"
+          jq '.containerDefinitions[0].image' new-task-def.json
+
+      - name: Register new task definition
+        id: register
+        run: |
+          NEW_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-task-def.json \
+            --query 'taskDefinition.taskDefinitionArn' \
             --output text)
-          echo "ALB: http://$ALB"
-          curl -f "http://$ALB/health" || exit 1
+          echo "arn=$NEW_ARN" >> "$GITHUB_OUTPUT"
+          echo "Registered: $NEW_ARN"
+
+      - name: Update ECS service to new task definition
+        run: |
+          aws ecs update-service \
+            --cluster        "$ECS_CLUSTER" \
+            --service        "$ECS_SERVICE" \
+            --task-definition "${{ steps.register.outputs.arn }}" \
+            --force-new-deployment \
+            --output json > /dev/null
+          echo "Service update triggered."
+
+      - name: Wait for ECS service to stabilise
+        run: |
+          echo "Waiting for service stability (up to 10 min)…"
+          aws ecs wait services-stable \
+            --cluster  "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE"
+          echo "Service is stable."
+
+      - name: Verify new task definition is actually running
+        # Catches silent ECS rollbacks — if ECS rolled back to old code the
+        # PRIMARY deployment will show the old ARN and this step fails the job.
+        run: |
+          RUNNING=$(aws ecs describe-services \
+            --cluster  "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition | [0]' \
+            --output text)
+          EXPECTED="${{ steps.register.outputs.arn }}"
+          echo "Expected: $EXPECTED"
+          echo "Running:  $RUNNING"
+          if [ "$RUNNING" != "$EXPECTED" ]; then
+            echo "::error::ECS is running the OLD task definition — deployment rolled back."
+            echo "::error::Check CloudWatch logs: /ecs/wholesale-crm"
+            exit 1
+          fi
+          echo "Confirmed: new task definition is live."
+
+      - name: Smoke test production
+        # Previous version tested http:// which got a 301 redirect — curl exits 0
+        # on 3xx so that test always passed. This checks the real HTTPS endpoint.
+        run: |
+          echo "Waiting 15 s for load-balancer target registration…"
+          sleep 15
+          for i in 1 2 3; do
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" \
+              --max-time 15 "https://wholesalesphere.forum/health")
+            echo "Attempt $i — HTTP $STATUS"
+            [ "$STATUS" = "200" ] && break
+            [ "$i" -lt 3 ] && sleep 15
+          done
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Production health check returned HTTP $STATUS — app may be down."
+            exit 1
+          fi
+          echo "Smoke test passed — production is healthy."
