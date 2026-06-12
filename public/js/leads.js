@@ -18,7 +18,7 @@ const LeadsPage = (() => {
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>Name</th><th>Source</th><th>Status</th><th>Value</th><th>Owner</th><th>Created</th><th></th></tr></thead>
-            <tbody id="leads-tbody">${Utils.spinner()}</tbody>
+            <tbody id="leads-tbody"><tr><td colspan="7">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
         <div id="leads-pagination" class="px-5 pb-4"></div>

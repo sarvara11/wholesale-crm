@@ -27,7 +27,7 @@ const InventoryPage = (() => {
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>SKU</th><th>Product Name</th><th>Category</th><th>Quantity</th><th>Price</th><th>Total Value</th><th></th></tr></thead>
-            <tbody id="inv-tbody">${Utils.spinner()}</tbody>
+            <tbody id="inv-tbody"><tr><td colspan="7">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
         <div id="inv-pagination" class="px-5 pb-4"></div>

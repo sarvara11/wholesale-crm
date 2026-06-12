@@ -19,7 +19,7 @@ const OpportunitiesPage = (() => {
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>Title</th><th>Customer</th><th>Stage</th><th>Amount</th><th>Owner</th><th>Created</th><th></th></tr></thead>
-            <tbody id="opp-tbody">${Utils.spinner()}</tbody>
+            <tbody id="opp-tbody"><tr><td colspan="7">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
         <div id="opp-pagination" class="px-5 pb-4"></div>

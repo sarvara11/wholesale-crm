@@ -10,7 +10,7 @@ const UsersPage = (() => {
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr></thead>
-            <tbody id="users-tbody">${Utils.spinner()}</tbody>
+            <tbody id="users-tbody"><tr><td colspan="5">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
       </div>`;

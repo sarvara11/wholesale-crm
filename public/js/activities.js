@@ -25,7 +25,7 @@ const ActivitiesPage = (() => {
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>Type</th><th>Note</th><th>Related To</th><th>Due Date</th><th>Status</th><th>Owner</th><th></th></tr></thead>
-            <tbody id="acts-tbody">${Utils.spinner()}</tbody>
+            <tbody id="acts-tbody"><tr><td colspan="7">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
         <div id="acts-pagination" class="px-5 pb-4"></div>

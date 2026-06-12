@@ -28,7 +28,7 @@ const AuditPage = (() => {
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead><tr><th>Timestamp</th><th>User</th><th>Role</th><th>Action</th><th>Entity</th><th>Entity ID</th></tr></thead>
-            <tbody id="audit-tbody">${Utils.spinner()}</tbody>
+            <tbody id="audit-tbody"><tr><td colspan="6">${Utils.spinner()}</td></tr></tbody>
           </table>
         </div>
         <div id="audit-pagination" class="px-5 pb-4"></div>
