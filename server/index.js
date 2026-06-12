@@ -23,7 +23,7 @@ app.use(
         formAction:              ["'self'"],
         frameAncestors:          ["'self'"],
         objectSrc:               ["'none'"],
-        upgradeInsecureRequests: [],
+        upgradeInsecureRequests: null,
         scriptSrc:     ["'self'", "'unsafe-inline'", "'unsafe-eval'",
                         "https://cdn.tailwindcss.com",
                         "https://cdn.jsdelivr.net",
