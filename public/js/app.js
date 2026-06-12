@@ -171,3 +171,7 @@ const App = (() => {
     logout,
   };
 })();
+
+// const does not create a window property — expose explicitly so other scripts
+// (customers.js, leads.js, etc.) can access window.App.currentUser
+window.App = App;
