@@ -14,40 +14,41 @@ function cookieOptions() {
 }
 
 // POST /api/auth/login
-async function login(req, res) {
-  const { email, password } = req.body;
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password)
-    return res.status(400).json({ error: "Email and password are required" });
+    if (!email || !password)
+      return res.status(400).json({ error: "Email and password are required" });
 
-  const user = await User.findOne({ email: email.toLowerCase().trim() });
-  if (!user)
-    return res.status(401).json({ error: "Invalid credentials" });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user)
+      return res.status(401).json({ error: "Invalid credentials" });
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid)
-    return res.status(401).json({ error: "Invalid credentials" });
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid)
+      return res.status(401).json({ error: "Invalid credentials" });
 
-  const token = jwt.sign(
-    { sub: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-  );
+    const token = jwt.sign(
+      { sub: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
 
-  res.cookie("token", token, cookieOptions());
+    res.cookie("token", token, cookieOptions());
 
-  // Fire-and-forget audit (req.user not set yet, so build a minimal stand-in)
-  req.user = user;
-  logAudit(req, "LOGIN", "User", user._id);
+    req.user = user;
+    logAudit(req, "LOGIN", "User", user._id);
 
-  return res.json({
-    user: {
-      _id:  user._id,
-      name: user.name,
-      email:user.email,
-      role: user.role,
-    },
-  });
+    return res.json({
+      user: {
+        _id:  user._id,
+        name: user.name,
+        email:user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) { next(err); }
 }
 
 // POST /api/auth/logout
