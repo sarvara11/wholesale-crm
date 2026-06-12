@@ -153,35 +153,43 @@ const CustomersPage = (() => {
   async function init() {
     _state.page = 1; _state.search = ''; _state.status = '';
 
-    // Prefetch users for assignment dropdown (manager only)
-    if (window.App.currentUser.role === 'manager') {
-      try { _state.users = await API.get('/users'); } catch { _state.users = []; }
-    }
+    const tbody = document.getElementById('cust-tbody');
 
-    loadData();
+    try {
+      // Prefetch users for assignment dropdown (manager only)
+      if (window.App.currentUser.role === 'manager') {
+        try { _state.users = await API.get('/users'); } catch { _state.users = []; }
+      }
 
-    document.getElementById('add-customer-btn').addEventListener('click', () => openForm());
+      loadData();
 
-    let searchTimer;
-    document.getElementById('cust-search').addEventListener('input', e => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { _state.search = e.target.value; _state.page = 1; loadData(); }, 400);
-    });
-    document.getElementById('cust-status').addEventListener('change', e => {
-      _state.status = e.target.value; _state.page = 1; loadData();
-    });
+      document.getElementById('add-customer-btn').addEventListener('click', () => openForm());
 
-    document.getElementById('cust-tbody').addEventListener('click', e => {
-      const btn = e.target.closest('[data-action]');
-      if (!btn) return;
-      const { action, id, name } = btn.dataset;
-      if (action === 'edit')   openForm(id);
-      if (action === 'assign') openAssign(id);
-      if (action === 'delete') Utils.confirmDelete(name, async () => {
-        try { await API.del('/customers/' + id); Utils.showToast('Customer deleted', 'success'); loadData(); }
-        catch (err) { Utils.showToast(err.message, 'error'); }
+      let searchTimer;
+      document.getElementById('cust-search').addEventListener('input', e => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { _state.search = e.target.value; _state.page = 1; loadData(); }, 400);
       });
-    });
+      document.getElementById('cust-status').addEventListener('change', e => {
+        _state.status = e.target.value; _state.page = 1; loadData();
+      });
+
+      tbody.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const { action, id, name } = btn.dataset;
+        if (action === 'edit')   openForm(id);
+        if (action === 'assign') openAssign(id);
+        if (action === 'delete') Utils.confirmDelete(name, async () => {
+          try { await API.del('/customers/' + id); Utils.showToast('Customer deleted', 'success'); loadData(); }
+          catch (err) { Utils.showToast(err.message, 'error'); }
+        });
+      });
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500 py-8">
+        Failed to load customers: ${Utils.esc(err.message)}
+      </td></tr>`;
+    }
   }
 
   return { render, init };
