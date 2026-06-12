@@ -127,12 +127,41 @@ jobs:
           echo "Service update triggered."
 
       - name: Wait for ECS service to stabilise
+        # aws ecs wait services-stable hard-caps at 40 polls × 15 s = 10 min.
+        # Rolling deployments with 2 tasks + health-check grace period routinely
+        # exceed that. This loop polls for up to 20 minutes instead.
         run: |
-          echo "Waiting for service stability (up to 10 min)…"
-          aws ecs wait services-stable \
-            --cluster  "$ECS_CLUSTER" \
-            --services "$ECS_SERVICE"
-          echo "Service is stable."
+          echo "Waiting for service stability (up to 20 min)…"
+          TIMEOUT=1200
+          ELAPSED=0
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            DEPLOYMENTS=$(aws ecs describe-services \
+              --cluster  "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE" \
+              --query    'services[0].deployments | length(@)' \
+              --output   text)
+            RUNNING=$(aws ecs describe-services \
+              --cluster  "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE" \
+              --query    'services[0].deployments[?status==`PRIMARY`].runningCount | [0]' \
+              --output   text)
+            DESIRED=$(aws ecs describe-services \
+              --cluster  "$ECS_CLUSTER" \
+              --services "$ECS_SERVICE" \
+              --query    'services[0].desiredCount' \
+              --output   text)
+            echo "${ELAPSED}s — deployments active: ${DEPLOYMENTS}, running: ${RUNNING}/${DESIRED}"
+            if [ "$DEPLOYMENTS" = "1" ] && [ "$RUNNING" = "$DESIRED" ]; then
+              echo "Service is stable."
+              break
+            fi
+            sleep 15
+            ELAPSED=$((ELAPSED + 15))
+          done
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "::error::Service did not stabilise within ${TIMEOUT}s"
+            exit 1
+          fi
 
       - name: Verify new task definition is actually running
         # Catches silent ECS rollbacks — if ECS rolled back to old code the
